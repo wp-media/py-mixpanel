@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mixpanel-tracking"
+version = "0.1.0"
+description = "Python wrapper for Mixpanel analytics"
+authors = [{name = "Mathieu Lamiot", email = "mathieu@wp-media.me"}]
+license = {text = "MIT"}
+readme = "README.md"
+dependencies = [
+    "mixpanel>=4.10.1",
+]
+requires-python = ">=3.8"
+
+[project.optional-dependencies]
+dev = [
+    "pylint==3.3.7",
+    "pytest==8.3.5",
+    "black==25.1.0",
+    "isort==6.0.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/wp-media/py-mixpanel"
+Repository = "https://github.com/wp-media/py-mixpanel"
+Issues = "https://github.com/wp-media/py-mixpanel"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.isort]
+py_version = 311
+multi_line_output = 3
+include_trailing_comma = true
+skip_glob = ["venv/*", "**/migrations/**"]
+profile = "black"
