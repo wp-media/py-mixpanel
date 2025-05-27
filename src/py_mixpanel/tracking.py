@@ -9,7 +9,7 @@ import mixpanel
 class Tracking:
     """Mixpanel tracking wrapper with utility methods."""
 
-    def __init__(self, mixpanel_token: str):
+    def __init__(self, mixpanel_token: str, feature_flag: bool = True):
         """
         Initialize Mixpanel tracking.
 
@@ -23,6 +23,7 @@ class Tracking:
                 'events_endpoint': '/track/?ip=0',
             }
         )
+        self.feature_flag = feature_flag
 
     def track(self, user_id, event: str, properties: Dict[str, Any]) -> None:
         """
@@ -32,6 +33,8 @@ class Tracking:
             event: Event name
             properties: Event properties dictionary
         """
+        if not self.feature_flag:
+            return
         self.mixpanel.track(self.hash(user_id), event, properties)
 
     def set_user_property(self, user_id: str, property_name: str, value: Any) -> None:
@@ -43,6 +46,8 @@ class Tracking:
             property_name: Property name
             value: Property value
         """
+        if not self.feature_flag:
+            return
         self.mixpanel.people_set(
             user_id,
             {property_name: value}
@@ -58,4 +63,6 @@ class Tracking:
         Returns:
             Hashed string
         """
+        if not self.feature_flag:
+            return
         return hashlib.sha3_224(value.encode('utf-8')).hexdigest()
