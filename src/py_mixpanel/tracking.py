@@ -18,10 +18,7 @@ class Tracking:
         """
         self.mixpanel = mixpanel.Mixpanel(
             mixpanel_token,
-            {
-                'host': 'api-eu.mixpanel.com',
-                'events_endpoint': '/track/?ip=0',
-            }
+            consumer=mixpanel.Consumer(api_host="api-eu.mixpanel.com"),
         )
         self.feature_flag = feature_flag
 
