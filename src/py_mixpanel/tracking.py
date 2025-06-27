@@ -62,4 +62,4 @@ class Tracking:
         """
         if not self.feature_flag:
             return
-        return hashlib.sha3_224(value.encode('utf-8')).hexdigest()
+        return hashlib.sha224(value.encode('utf-8')).hexdigest()
