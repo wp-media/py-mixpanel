@@ -25,7 +25,7 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/wp-media/py-mixpanel"
 Repository = "https://github.com/wp-media/py-mixpanel"
-Issues = "htps://github.com/wp-media/py-mixpanel/issues"
+Issues = "https://github.com/wp-media/py-mixpanel/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
