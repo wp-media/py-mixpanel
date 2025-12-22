@@ -40,10 +40,7 @@ class Tracking:
         """
         if not self.feature_flag:
             return
-        self.mixpanel.people_set(
-            user_id,
-            {property_name: value}
-        )
+        self.mixpanel.people_set(user_id, {property_name: value})
 
     def hash(self, value: str) -> str:
         """
@@ -57,4 +54,4 @@ class Tracking:
         """
         if not self.feature_flag:
             return
-        return hashlib.sha224(value.encode('utf-8')).hexdigest()
+        return hashlib.sha224(value.encode("utf-8")).hexdigest()
