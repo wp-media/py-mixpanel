@@ -8,3 +8,4 @@ venv/
 .pytest_cache
 uv.lock
 .ruff_cache
+.mypy_cache

@@ -21,6 +21,7 @@ requires-python = ">=3.13"
 dev = [
     "ruff==0.14.10",
     "pytest>=9.0.2",
+    "mypy==1.19.1",
 ]
 
 [project.urls]
@@ -36,3 +37,14 @@ testpaths = [
     "tests",
 ]
 python_files = ["*.py"]
+
+[tool.mypy]
+python_version = "3.13"
+
+[[tool.mypy.overrides]]
+module = "mixpanel"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pytest"
+ignore_missing_imports = true

@@ -53,5 +53,5 @@ class Tracking:
             Hashed string
         """
         if not self.feature_flag:
-            return
+            return ''
         return hashlib.sha224(value.encode("utf-8")).hexdigest()
