@@ -1,0 +1,21 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+
+      - run: uv sync
+
+      - name: Type check
+        run: uv tool run mypy .
+
+      - name: Lint check
+        run: uv tool run ruff .
+
+      - name: Format check
+        run: uv tool run ruff format --check
