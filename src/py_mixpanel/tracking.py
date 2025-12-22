@@ -36,7 +36,7 @@ class Tracking:
         """
         if not self.enable_tracking:
             return
-        self.mixpanel.track(self.hash_user_id(user_id), event, properties)
+        self.mixpanel.track(self.hash(user_id), event, properties)
 
     def set_user_property(self, user_id: str, property_name: str, value: t.Any) -> None:
         """
@@ -44,10 +44,15 @@ class Tracking:
         """
         if not self.enable_tracking:
             return
-        self.mixpanel.people_set(self.hash_user_id(user_id), {property_name: value})
+        self.mixpanel.people_set(self.hash(user_id), {property_name: value})
 
-    def hash_user_id(self, user_id: str) -> str:
+    def hash(self, user_id: str) -> str:
         """
-        Hash a user ID using SHA3-224; obscuring any personal information.
+        Hash the input using SHA-224.
+
+        This has the potential to obscure any personal information by making
+        it more difficult to access. E-mail addresses, for example, will
+        become impossible to revert unless you have a list of known email
+        addresses at your disposal.
         """
         return hashlib.sha224(user_id.encode("utf-8")).hexdigest()

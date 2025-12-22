@@ -37,7 +37,7 @@ def test_enable_tracking_true(mixpanel_mock: Mock, hashlib_mock: Mock) -> None:
     tracker = Tracking("abc", enable_tracking=True)
     tracker.track("abc", "def", {})
     tracker.set_user_property("abc", "def", "xyz")
-    tracker.hash_user_id("xxx")
+    tracker.hash("xxx")
 
     assert mixpanel_instance.track.call_count == 1
     assert mixpanel_instance.people_set.call_count == 1
@@ -69,7 +69,7 @@ def test_deprecated_feature_flag_parameter_enable_tracking(
     tracker = Tracking("abc", feature_flag=True)
     tracker.track("abc", "def", {})
     tracker.set_user_property("abc", "def", "xyz")
-    tracker.hash_user_id("xxx")
+    tracker.hash("xxx")
 
     assert mixpanel_instance.track.call_count == 1
     assert mixpanel_instance.people_set.call_count == 1
@@ -120,13 +120,13 @@ def test_set_user_property(mixpanel_mock: Mock) -> None:
 
 
 @patch("mixpanel.Mixpanel")
-def test_hashing_user_id(mixpanel_mock: Mock) -> None:
+def test_hashing(mixpanel_mock: Mock) -> None:
     mixpanel_instance = Mock()
     mixpanel_mock.return_value = mixpanel_instance
 
     tracker = Tracking("abc", enable_tracking=True)
 
     assert (
-        tracker.hash_user_id("Hey there! ✨")
+        tracker.hash("Hey there! ✨")
         == "cbb191a99676855af0093cb88834e86d61f941a4964ebabd357c77c0"
     )
