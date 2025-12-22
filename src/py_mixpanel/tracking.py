@@ -1,20 +1,15 @@
-"""Main tracking functionality for Mixpanel."""
-
 import hashlib
-from typing import Any, Dict
+import typing as t
 
 import mixpanel
 
 
 class Tracking:
-    """Mixpanel tracking wrapper with utility methods."""
-
     def __init__(self, mixpanel_token: str, feature_flag: bool = True):
         """
-        Initialize Mixpanel tracking.
+        Initialize an instance of the Mixpanel tracking class.
 
-        Args:
-            mixpanel_token: Mixpanel project token
+        Provide a valid `mixpanel_token`.
         """
         self.mixpanel = mixpanel.Mixpanel(
             mixpanel_token,
@@ -22,7 +17,7 @@ class Tracking:
         )
         self.feature_flag = feature_flag
 
-    def track(self, user_id, event: str, properties: Dict[str, Any]) -> None:
+    def track(self, user_id, event: str, properties: t.Dict[str, t.Any]) -> None:
         """
         Track an event in Mixpanel.
 
@@ -34,7 +29,7 @@ class Tracking:
             return
         self.mixpanel.track(self.hash(user_id), event, properties)
 
-    def set_user_property(self, user_id: str, property_name: str, value: Any) -> None:
+    def set_user_property(self, user_id: str, property_name: str, value: t.Any) -> None:
         """
         Set a user property in Mixpanel.
 

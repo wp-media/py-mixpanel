@@ -20,6 +20,7 @@ requires-python = ">=3.13"
 [project.optional-dependencies]
 dev = [
     "ruff==0.14.10",
+    "pytest>=9.0.2",
 ]
 
 [project.urls]
@@ -29,3 +30,9 @@ Issues = "htps://github.com/wp-media/py-mixpanel/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest]
+testpaths = [
+    "tests",
+]
+python_files = ["*.py"]
