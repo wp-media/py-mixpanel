@@ -35,6 +35,9 @@ class DjangoMiddleware:
         # (uses the session)
         USER_TRACKING: bool,  # default: False
 
+        # Keep track of HTMX headers in fired events
+        TRACK_HTMX: bool,  # default: True
+
         # Name the event that will be sent on every page view
         PAGE_VIEW_EVENT_NAME: str,  # default: "Page Viewed"
 
@@ -57,10 +60,21 @@ class DjangoMiddleware:
 
     def get_payload(self, request) -> dict:
         """Based on a request, return the desired payload"""
+
         payload = {
             "origin": "django-middleware",
             "page": str(request.path),
         }
+
+        if self.settings.get("TRACK_HTMX", True):
+            payload.update(
+                {
+                    key.lower(): value
+                    for key, value in request.headers.items()
+                    if key.upper().startswith("HX-")
+                }
+            )
+
         payload.update(self.settings.get("PAGE_VIEW_EVENT_PAYLOAD", {}))
         return payload
 

@@ -5,7 +5,7 @@ This repository provides a comprehensive layer on top of the
 which adds:
 
 * Support for anonymizing email addresses and including them in tracked events
-* Django middleware & view support
+* Django middleware & view support (including support for HTMX)
 
 ## Development
 

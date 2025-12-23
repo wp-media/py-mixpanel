@@ -22,6 +22,14 @@ def tracker_mock() -> t.Generator[MagicMock, None, None]:
         yield mock
 
 
+@pytest.fixture()
+def request_mock() -> Mock:
+    request_mock = Mock()
+    request_mock.path = "/hello-world"
+    request_mock.headers = {"User-Agent": "Netscape/1.0"}
+    return request_mock
+
+
 def test_initialization(django_settings_mock: Mock) -> None:
     get_response = Mock()
     middleware = DjangoMiddleware(get_response)
@@ -29,9 +37,8 @@ def test_initialization(django_settings_mock: Mock) -> None:
     assert middleware.settings == django_settings_mock
 
 
-def test_get_payload() -> None:
+def test_get_payload(request_mock: Mock) -> None:
     middleware = DjangoMiddleware(Mock())
-    request_mock = Mock()
     request_mock.path = "/hello-world"
     payload = middleware.get_payload(request_mock)
     assert payload == {
@@ -40,10 +47,11 @@ def test_get_payload() -> None:
     }
 
 
-def test_get_payload_with_setting_dict(django_settings_mock: dict) -> None:
+def test_get_payload_with_setting_dict(
+    django_settings_mock: dict, request_mock: Mock
+) -> None:
     django_settings_mock["PAGE_VIEW_EVENT_PAYLOAD"] = {"a": "1", "b": "2"}
     middleware = DjangoMiddleware(Mock())
-    request_mock = Mock()
     request_mock.path = "/hello-world"
     payload = middleware.get_payload(request_mock)
     assert payload == {
@@ -67,6 +75,7 @@ def test_get_payload_with_setting_dict(django_settings_mock: dict) -> None:
 def test_tracking_enabled(
     django_settings_mock: dict,
     tracker_mock: Mock,
+    request_mock: Mock,
     setting: str | None,
     is_authenticated: bool,
     does_tracking: bool,
@@ -76,7 +85,6 @@ def test_tracking_enabled(
 
     middleware = DjangoMiddleware(Mock())
 
-    request_mock = Mock()
     request_mock.user.is_authenticated = is_authenticated
 
     middleware(request_mock)
@@ -85,12 +93,11 @@ def test_tracking_enabled(
 
 def test_tracking(
     tracker_mock: Mock,
+    request_mock: Mock,
 ) -> None:
     middleware = DjangoMiddleware(Mock())
 
-    request_mock = Mock()
     request_mock.user.is_authenticated = True
-    request_mock.path = "/hello-world"
     request_mock.user.email = "mark@mark.com"
 
     tracking_instance = Mock()
@@ -116,13 +123,13 @@ def test_tracking(
 def test_does_not_track_if_token_unset(
     django_settings_mock: dict,
     tracker_mock: Mock,
+    request_mock: Mock,
 ) -> None:
     django_settings_mock["ENABLE_TRACKING"] = True
     django_settings_mock["TOKEN"] = None
 
     middleware = DjangoMiddleware(Mock())
 
-    request_mock = Mock()
     request_mock.user.is_authenticated = True
 
     middleware(request_mock)
@@ -132,12 +139,12 @@ def test_does_not_track_if_token_unset(
 def test_tracking_with_custom_event_name(
     django_settings_mock: dict,
     tracker_mock: Mock,
+    request_mock: Mock,
 ) -> None:
     django_settings_mock["PAGE_VIEW_EVENT_NAME"] = "A Custom Event"
 
     middleware = DjangoMiddleware(Mock())
 
-    request_mock = Mock()
     request_mock.user.is_authenticated = True
 
     tracking_instance = Mock()
@@ -165,6 +172,7 @@ def test_tracking_with_custom_event_name(
 def test_user_tracking_enabled(
     django_settings_mock: dict,
     tracker_mock: Mock,
+    request_mock: Mock,
     setting: str | bool | None,
     in_session: bool,
     does_user_tracking: bool,
@@ -174,7 +182,6 @@ def test_user_tracking_enabled(
 
     middleware = DjangoMiddleware(Mock())
 
-    request_mock = Mock()
     request_mock.user.email = "mark@mark.com"
     request_mock.session = {"_py_mixpanel": True} if in_session else {}
 
@@ -187,12 +194,12 @@ def test_user_tracking_enabled(
 def test_user_tracking(
     django_settings_mock: dict,
     tracker_mock: Mock,
+    request_mock: Mock,
 ) -> None:
     django_settings_mock["USER_TRACKING"] = True
 
     middleware = DjangoMiddleware(Mock())
 
-    request_mock = Mock()
     request_mock.user.email = "mark@domain.com"
     request_mock.session = {}
 
@@ -211,6 +218,28 @@ def test_user_tracking(
         },
     )
     hashing_instance.assert_called_once_with("domain.com")
+
+
+def test_htmx_tracking(
+    request_mock: Mock,
+) -> None:
+    middleware = DjangoMiddleware(Mock())
+
+    request_mock.user.is_authenticated = True
+    request_mock.headers.update(
+        {
+            "HX-ABC": "abc",
+            "HX-XYZ": "xyz",
+            "Unrelated-Header": "unrelated",
+        }
+    )
+
+    assert middleware.get_payload(request_mock) == {
+        "origin": "django-middleware",
+        "page": "/hello-world",
+        "hx-abc": "abc",
+        "hx-xyz": "xyz",
+    }
 
 
 def test_middleware_renders_response() -> None:
