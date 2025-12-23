@@ -5,30 +5,10 @@ from unittest.mock import patch, Mock, MagicMock, ANY
 from py_mixpanel import DjangoMixpanelMiddleware
 
 
-@pytest.fixture(autouse=True)
-def django_settings_mock() -> t.Generator[dict[str, str | None], None, None]:
-    settings_dict: dict[str, str | None] = {"TOKEN": "xxx"}
-    settings_mock = Mock()
-    settings_mock.MIXPANEL_OPTIONS = settings_dict
-    with patch(
-        "py_mixpanel.DjangoMixpanelMiddleware._get_django_settings",
-        return_value=settings_mock,
-    ):
-        yield settings_dict
-
-
 @pytest.fixture()
 def tracker_mock() -> t.Generator[MagicMock, None, None]:
     with patch("py_mixpanel.django_middleware.Tracking") as mock:
         yield mock
-
-
-@pytest.fixture()
-def request_mock() -> Mock:
-    request_mock = Mock()
-    request_mock.path = "/hello-world"
-    request_mock.headers = {"User-Agent": "Netscape/1.0"}
-    return request_mock
 
 
 def test_initialization(django_settings_mock: Mock) -> None:
