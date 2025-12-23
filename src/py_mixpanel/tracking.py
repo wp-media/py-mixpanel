@@ -4,6 +4,7 @@ import typing as t
 import mixpanel
 
 
+ANONYMOUS_USER_ID = "anonymous"
 DEFAULT_API_HOST = "api-eu.mixpanel.com"
 
 
@@ -68,4 +69,8 @@ class Tracking:
         become impossible to revert unless you have a list of known email
         addresses at your disposal.
         """
+
+        if user_id == ANONYMOUS_USER_ID:
+            return user_id
+
         return hashlib.sha224(user_id.encode("utf-8")).hexdigest()

@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from py_mixpanel import Tracking
+from py_mixpanel import Tracking, ANONYMOUS_USER_ID
 
 
 @patch("mixpanel.Mixpanel")
@@ -144,3 +144,13 @@ def test_hashing(mixpanel_mock: Mock) -> None:
         tracker.hash("Hey there! ✨")
         == "cbb191a99676855af0093cb88834e86d61f941a4964ebabd357c77c0"
     )
+
+
+@patch("mixpanel.Mixpanel")
+def test_hashing_anonymous_user_id(mixpanel_mock: Mock) -> None:
+    mixpanel_instance = Mock()
+    mixpanel_mock.return_value = mixpanel_instance
+
+    tracker = Tracking(ANONYMOUS_USER_ID, enable_tracking=True)
+
+    assert tracker.hash(ANONYMOUS_USER_ID) == "anonymous"
