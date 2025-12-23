@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 
 from .tracking import Tracking, ANONYMOUS_USER_ID
@@ -38,9 +40,11 @@ class DjangoMixpanelMixin:
         ):
             return
 
+        request = t.cast("HttpRequest", self.request)
+
         user_id = (
-            self.request.user.email
-            if self.request.is_authenticated and hasattr(self.request.user, "email")
+            getattr(request.user, "email", ANONYMOUS_USER_ID)
+            if request.user.is_authenticated
             else ANONYMOUS_USER_ID
         )
         tracker = Tracking(
@@ -48,4 +52,4 @@ class DjangoMixpanelMixin:
             enable_tracking=True,
             api_host=settings.get("API_HOST"),
         )
-        tracker.track(user_id, event, self.mixpanel_get_payload(self.request, payload))
+        tracker.track(user_id, event, self.mixpanel_get_payload(request, payload))
