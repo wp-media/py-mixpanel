@@ -12,7 +12,7 @@ MIXPANEL_SESSION_KEY = "_py_mixpanel"
 DEFAULT_PAGE_VIEW_EVENT_NAME = "Page Viewed"
 
 
-class DjangoMiddleware:
+class DjangoMixpanelMiddleware:
     """
     A middleware for use with Django that automatically tracks Mixpanel events
     for any request by a logged-in user. Django must be installed in your

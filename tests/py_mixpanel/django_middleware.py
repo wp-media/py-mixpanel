@@ -2,7 +2,7 @@ import pytest
 import typing as t
 from unittest.mock import patch, Mock, MagicMock, ANY
 
-from py_mixpanel import DjangoMiddleware
+from py_mixpanel import DjangoMixpanelMiddleware
 
 
 @pytest.fixture(autouse=True)
@@ -11,7 +11,8 @@ def django_settings_mock() -> t.Generator[dict[str, str | None], None, None]:
     settings_mock = Mock()
     settings_mock.MIXPANEL_OPTIONS = settings_dict
     with patch(
-        "py_mixpanel.DjangoMiddleware._get_django_settings", return_value=settings_mock
+        "py_mixpanel.DjangoMixpanelMiddleware._get_django_settings",
+        return_value=settings_mock,
     ):
         yield settings_dict
 
@@ -32,13 +33,13 @@ def request_mock() -> Mock:
 
 def test_initialization(django_settings_mock: Mock) -> None:
     get_response = Mock()
-    middleware = DjangoMiddleware(get_response)
+    middleware = DjangoMixpanelMiddleware(get_response)
     assert middleware.get_response == get_response
     assert middleware.settings == django_settings_mock
 
 
 def test_get_payload(request_mock: Mock) -> None:
-    middleware = DjangoMiddleware(Mock())
+    middleware = DjangoMixpanelMiddleware(Mock())
     request_mock.path = "/hello-world"
     payload = middleware.get_payload(request_mock)
     assert payload == {
@@ -51,7 +52,7 @@ def test_get_payload_with_setting_dict(
     django_settings_mock: dict, request_mock: Mock
 ) -> None:
     django_settings_mock["PAGE_VIEW_EVENT_PAYLOAD"] = {"a": "1", "b": "2"}
-    middleware = DjangoMiddleware(Mock())
+    middleware = DjangoMixpanelMiddleware(Mock())
     request_mock.path = "/hello-world"
     payload = middleware.get_payload(request_mock)
     assert payload == {
@@ -83,7 +84,7 @@ def test_tracking_enabled(
     if setting is not None:
         django_settings_mock["ENABLE_TRACKING"] = setting
 
-    middleware = DjangoMiddleware(Mock())
+    middleware = DjangoMixpanelMiddleware(Mock())
 
     request_mock.user.is_authenticated = is_authenticated
 
@@ -95,7 +96,7 @@ def test_tracking(
     tracker_mock: Mock,
     request_mock: Mock,
 ) -> None:
-    middleware = DjangoMiddleware(Mock())
+    middleware = DjangoMixpanelMiddleware(Mock())
 
     request_mock.user.is_authenticated = True
     request_mock.user.email = "mark@mark.com"
@@ -128,7 +129,7 @@ def test_does_not_track_if_token_unset(
     django_settings_mock["ENABLE_TRACKING"] = True
     django_settings_mock["TOKEN"] = None
 
-    middleware = DjangoMiddleware(Mock())
+    middleware = DjangoMixpanelMiddleware(Mock())
 
     request_mock.user.is_authenticated = True
 
@@ -143,7 +144,7 @@ def test_tracking_with_custom_event_name(
 ) -> None:
     django_settings_mock["PAGE_VIEW_EVENT_NAME"] = "A Custom Event"
 
-    middleware = DjangoMiddleware(Mock())
+    middleware = DjangoMixpanelMiddleware(Mock())
 
     request_mock.user.is_authenticated = True
 
@@ -180,7 +181,7 @@ def test_user_tracking_enabled(
     if setting is not None:
         django_settings_mock["USER_TRACKING"] = setting
 
-    middleware = DjangoMiddleware(Mock())
+    middleware = DjangoMixpanelMiddleware(Mock())
 
     request_mock.user.email = "mark@mark.com"
     request_mock.session = {"_py_mixpanel": True} if in_session else {}
@@ -198,7 +199,7 @@ def test_user_tracking(
 ) -> None:
     django_settings_mock["USER_TRACKING"] = True
 
-    middleware = DjangoMiddleware(Mock())
+    middleware = DjangoMixpanelMiddleware(Mock())
 
     request_mock.user.email = "mark@domain.com"
     request_mock.session = {}
@@ -223,7 +224,7 @@ def test_user_tracking(
 def test_htmx_tracking(
     request_mock: Mock,
 ) -> None:
-    middleware = DjangoMiddleware(Mock())
+    middleware = DjangoMixpanelMiddleware(Mock())
 
     request_mock.user.is_authenticated = True
     request_mock.headers.update(
@@ -246,7 +247,7 @@ def test_middleware_renders_response() -> None:
     SENTINEL = "f1108656-8667-41fd-92c0-520840ac9579"
     get_response_mock = Mock()
     get_response_mock.return_value = SENTINEL
-    middleware = DjangoMiddleware(get_response_mock)
+    middleware = DjangoMixpanelMiddleware(get_response_mock)
     request_mock = Mock()
     request_mock.user.is_authenticated = False
 
