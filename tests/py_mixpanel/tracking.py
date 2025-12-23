@@ -120,6 +120,20 @@ def test_set_user_property(mixpanel_mock: Mock) -> None:
 
 
 @patch("mixpanel.Mixpanel")
+def test_set_user_properties(mixpanel_mock: Mock) -> None:
+    mixpanel_instance = Mock()
+    mixpanel_mock.return_value = mixpanel_instance
+
+    tracker = Tracking("abc", enable_tracking=True)
+    tracker.set_user_properties("mark", {"a": "1", "b": "2"})
+
+    mixpanel_instance.people_set.assert_called_once_with(
+        "b9e09e7675f9103783963b8cafa4992c7430ff1e21dd490ef8972cff",
+        {"a": "1", "b": "2"},
+    )
+
+
+@patch("mixpanel.Mixpanel")
 def test_hashing(mixpanel_mock: Mock) -> None:
     mixpanel_instance = Mock()
     mixpanel_mock.return_value = mixpanel_instance

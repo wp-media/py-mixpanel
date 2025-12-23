@@ -4,7 +4,7 @@ This repository provides a comprehensive layer on top of the
 [official Python library from Mixpanel](https://pypi.org/project/mixpanel/)
 which adds:
 
-* Support for anonymizing email addresses and including them in trakced events
+* Support for anonymizing email addresses and including them in tracked events
 * Django middleware & view support
 
 ## Development
@@ -24,7 +24,7 @@ $ uv run pytest
 Run the type checker:
 
 ```bash
-uv tool run mypy .
+uv run mypy .
 ```
 
 ### Formatting and linting (ruff)

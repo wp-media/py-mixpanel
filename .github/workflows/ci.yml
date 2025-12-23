@@ -11,11 +11,12 @@ jobs:
 
       - run: uv sync
 
-      - name: Type check
-        run: uv tool run mypy .
+      - name: Pytest
+        run: uv run pytest
 
-      - name: Linter
+      - name: Mypy
+        run: uv run mypy .
+
+      - name: Ruff
         run: uv tool run ruff check
-
-      - name: Format check
         run: uv tool run ruff format --check

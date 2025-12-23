@@ -17,11 +17,6 @@ dependencies = [
 ]
 requires-python = ">=3.13"
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=9.0.2",
-]
-
 [project.urls]
 Homepage = "https://github.com/wp-media/py-mixpanel"
 Repository = "https://github.com/wp-media/py-mixpanel"
@@ -46,3 +41,10 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "pytest"
 ignore_missing_imports = true
+
+[dependency-groups]
+dev = [
+    "django-stubs>=5.2.8",
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+]

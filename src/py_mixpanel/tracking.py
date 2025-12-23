@@ -4,13 +4,16 @@ import typing as t
 import mixpanel
 
 
+DEFAULT_API_HOST = "api-eu.mixpanel.com"
+
+
 class Tracking:
     def __init__(
         self,
         mixpanel_token: str,
         feature_flag: bool = True,  # deprecated @feature-flag-param-deprecated
         enable_tracking: bool = True,
-        api_host: str = "api-eu.mixpanel.com",
+        api_host: str | None = None,
     ):
         """
         Initialize an instance of the Mixpanel tracking class.
@@ -24,6 +27,8 @@ class Tracking:
         The `feature_flag` parameter is DEPRECATED and will be removed
         in a future version. @feature-flag-param-deprecated
         """
+        if not api_host:
+            api_host = DEFAULT_API_HOST
         self.mixpanel = mixpanel.Mixpanel(
             mixpanel_token,
             consumer=mixpanel.Consumer(api_host=api_host),
@@ -45,6 +50,14 @@ class Tracking:
         if not self.enable_tracking:
             return
         self.mixpanel.people_set(self.hash(user_id), {property_name: value})
+
+    def set_user_properties(self, user_id: str, properties: dict[str, str]) -> None:
+        """
+        Set multiple user properties in Mixpanel. Anonymize the user ID.
+        """
+        if not self.enable_tracking:
+            return
+        self.mixpanel.people_set(self.hash(user_id), properties)
 
     def hash(self, user_id: str) -> str:
         """
