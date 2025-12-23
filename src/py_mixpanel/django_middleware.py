@@ -18,34 +18,6 @@ class DjangoMixpanelMiddleware:
     A middleware for use with Django that automatically tracks Mixpanel events
     for any request by a logged-in user. Django must be installed in your
     project for this class to be used.
-
-    Use your Django project settings to define settings for the middleware:
-
-    MIXPANEL_OPTIONS = {
-
-        # Your Mixpanel token
-        TOKEN: str,
-
-        # Potentially override the API host
-        API_HOST: str,
-
-        # Enable or disable actual tracking
-        ENABLE_TRACKING: bool,  # default: True
-
-        # Track certain properties for every user using the middleware
-        # (uses the session)
-        USER_TRACKING: bool,  # default: False
-
-        # Keep track of HTMX headers in fired events
-        TRACK_HTMX: bool,  # default: True
-
-        # Name the event that will be sent on every page view
-        PAGE_VIEW_EVENT_NAME: str,  # default: "Page Viewed"
-
-        # Provide a static default payload for all events
-        PAGE_VIEW_EVENT_PAYLOAD: dict,  # default: {}
-
-    }
     """
 
     def __init__(self, get_response) -> None:
