@@ -17,10 +17,23 @@ dependencies = [
 ]
 requires-python = ">=3.13"
 
+[dependency-groups]
+dev = [
+    "django-stubs>=5.2.8",
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+]
+
 [project.urls]
 Homepage = "https://github.com/wp-media/py-mixpanel"
 Repository = "https://github.com/wp-media/py-mixpanel"
 Issues = "https://github.com/wp-media/py-mixpanel/issues"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+py_mixpanel = ["py.typed"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -42,9 +55,3 @@ ignore_missing_imports = true
 module = "pytest"
 ignore_missing_imports = true
 
-[dependency-groups]
-dev = [
-    "django-stubs>=5.2.8",
-    "mypy>=1.19.1",
-    "pytest>=9.0.2",
-]
