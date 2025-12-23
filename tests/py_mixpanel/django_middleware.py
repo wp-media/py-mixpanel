@@ -7,7 +7,7 @@ from py_mixpanel import DjangoMiddleware
 
 @pytest.fixture(autouse=True)
 def django_settings_mock() -> t.Generator[dict[str, str | None], None, None]:
-    settings_dict: dict[str, str | None] = {}
+    settings_dict: dict[str, str | None] = {"TOKEN": "xxx"}
     settings_mock = Mock()
     settings_mock.MIXPANEL_OPTIONS = settings_dict
     with patch(
@@ -99,7 +99,7 @@ def test_tracking(
     middleware(request_mock)
 
     tracker_mock.assert_called_once_with(
-        mixpanel_token="",
+        mixpanel_token="xxx",
         enable_tracking=True,
         api_host=None,
     )
@@ -111,6 +111,22 @@ def test_tracking(
             "page": "/hello-world",
         },
     )
+
+
+def test_does_not_track_if_token_unset(
+    django_settings_mock: dict,
+    tracker_mock: Mock,
+) -> None:
+    django_settings_mock["ENABLE_TRACKING"] = True
+    django_settings_mock["TOKEN"] = None
+
+    middleware = DjangoMiddleware(Mock())
+
+    request_mock = Mock()
+    request_mock.user.is_authenticated = True
+
+    middleware(request_mock)
+    assert tracker_mock.call_count == 0
 
 
 def test_tracking_with_custom_event_name(

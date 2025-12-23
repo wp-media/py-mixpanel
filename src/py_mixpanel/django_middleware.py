@@ -67,6 +67,7 @@ class DjangoMiddleware:
     def __call__(self, request):
         if (
             bool(self.settings.get("ENABLE_TRACKING", True))
+            and self.settings.get("TOKEN", "")
             and request.user.is_authenticated
         ):
             user_id = request.user.email
