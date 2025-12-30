@@ -1,9 +1,10 @@
-"""Mixpanel Tracking Library - A Python wrapper for Mixpanel analytics."""
+from .tracking import Tracking, ANONYMOUS_USER_ID
+from .django_middleware import DjangoMixpanelMiddleware
+from .django_views import DjangoMixpanelMixin
 
-__version__ = "0.1.0"
-__author__ = "WP Media, group.one"
-__email__ = "contact@wp-media.me"
-
-from .tracking import Tracking
-
-__all__ = ["Tracking"]
+__all__ = [
+    "Tracking",
+    "DjangoMixpanelMiddleware",
+    "DjangoMixpanelMixin",
+    "ANONYMOUS_USER_ID",
+]

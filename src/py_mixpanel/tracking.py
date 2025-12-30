@@ -1,65 +1,76 @@
-"""Main tracking functionality for Mixpanel."""
-
 import hashlib
-from typing import Any, Dict
+import typing as t
 
 import mixpanel
 
 
+ANONYMOUS_USER_ID = "anonymous"
+DEFAULT_API_HOST = "api-eu.mixpanel.com"
+
+
 class Tracking:
-    """Mixpanel tracking wrapper with utility methods."""
-
-    def __init__(self, mixpanel_token: str, feature_flag: bool = True):
+    def __init__(
+        self,
+        mixpanel_token: str,
+        feature_flag: bool = True,  # deprecated @feature-flag-param-deprecated
+        enable_tracking: bool = True,
+        api_host: str | None = None,
+    ):
         """
-        Initialize Mixpanel tracking.
+        Initialize an instance of the Mixpanel tracking class.
 
-        Args:
-            mixpanel_token: Mixpanel project token
+        Provide a valid `mixpanel_token`. Control the Mixpanel API
+        host that is being used using `api_host`.
+
+        Tracking is enabled by default, but can be disabled by passing
+        `enable_tracking=False`.
+
+        The `feature_flag` parameter is DEPRECATED and will be removed
+        in a future version. @feature-flag-param-deprecated
         """
+        if not api_host:
+            api_host = DEFAULT_API_HOST
         self.mixpanel = mixpanel.Mixpanel(
             mixpanel_token,
-            consumer=mixpanel.Consumer(api_host="api-eu.mixpanel.com"),
+            consumer=mixpanel.Consumer(api_host=api_host),
         )
-        self.feature_flag = feature_flag
+        self.enable_tracking = feature_flag and enable_tracking
 
-    def track(self, user_id, event: str, properties: Dict[str, Any]) -> None:
+    def track(self, user_id, event: str, properties: t.Dict[str, t.Any]) -> None:
         """
-        Track an event in Mixpanel.
-
-        Args:
-            event: Event name
-            properties: Event properties dictionary
+        Track an event in Mixpanel. Anonymize the user ID.
         """
-        if not self.feature_flag:
+        if not self.enable_tracking:
             return
         self.mixpanel.track(self.hash(user_id), event, properties)
 
-    def set_user_property(self, user_id: str, property_name: str, value: Any) -> None:
+    def set_user_property(self, user_id: str, property_name: str, value: t.Any) -> None:
         """
-        Set a user property in Mixpanel.
-
-        Args:
-            user_id: User ID
-            property_name: Property name
-            value: Property value
+        Set a user property in Mixpanel. Anonymize the user ID.
         """
-        if not self.feature_flag:
+        if not self.enable_tracking:
             return
-        self.mixpanel.people_set(
-            user_id,
-            {property_name: value}
-        )
+        self.mixpanel.people_set(self.hash(user_id), {property_name: value})
 
-    def hash(self, value: str) -> str:
+    def set_user_properties(self, user_id: str, properties: dict[str, str]) -> None:
         """
-        Hash a value using SHA3-224.
-
-        Args:
-            value: Value to hash
-
-        Returns:
-            Hashed string
+        Set multiple user properties in Mixpanel. Anonymize the user ID.
         """
-        if not self.feature_flag:
+        if not self.enable_tracking:
             return
-        return hashlib.sha224(value.encode('utf-8')).hexdigest()
+        self.mixpanel.people_set(self.hash(user_id), properties)
+
+    def hash(self, user_id: str) -> str:
+        """
+        Hash the input using SHA-224.
+
+        This has the potential to obscure any personal information by making
+        it more difficult to access. E-mail addresses, for example, will
+        become impossible to revert unless you have a list of known email
+        addresses at your disposal.
+        """
+
+        if user_id == ANONYMOUS_USER_ID:
+            return user_id
+
+        return hashlib.sha224(user_id.encode("utf-8")).hexdigest()
