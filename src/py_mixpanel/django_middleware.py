@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+import re
 
 from .tracking import Tracking, ANONYMOUS_USER_ID
 
@@ -26,6 +27,16 @@ class DjangoMixpanelMiddleware:
             self._get_django_settings(), "MIXPANEL_OPTIONS", {}
         )
 
+    def _should_exclude_path(self, path: str) -> bool:
+        """
+        Check if the path should be excluded from tracking.
+        """
+        exclusion_patterns = self.settings.get("EXCLUDE_PATHS", [])
+        if not exclusion_patterns:
+            return False
+
+        return any(re.match(pattern, path) for pattern in exclusion_patterns)
+
     def _get_django_settings(self) -> LazySettings:
         from django.conf import settings
 
@@ -37,6 +48,7 @@ class DjangoMixpanelMiddleware:
         payload = {
             "origin": "django-middleware",
             "page": str(request.path),
+            "host": request.get_host(),
         }
 
         if self.settings.get("TRACK_HTMX", True):
@@ -52,6 +64,8 @@ class DjangoMixpanelMiddleware:
         return payload
 
     def __call__(self, request: HttpRequest):
+        if self._should_exclude_path(str(request.path)):
+            return self.get_response(request)
         if (
             bool(self.settings.get("ENABLE_TRACKING", True))
             and self.settings.get("TOKEN", "")

@@ -26,6 +26,7 @@ class DjangoMixpanelMixin:
         base = {
             "origin": "django-view-mixin",
             "page": request.path,
+            "host": request.get_host(),
         }
         base.update(payload)
         return base

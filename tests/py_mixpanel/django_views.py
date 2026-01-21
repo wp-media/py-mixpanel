@@ -13,14 +13,25 @@ def tracker_mock() -> t.Generator[MagicMock, None, None]:
 
 def test_get_payload(request_mock: Mock) -> None:
     instance = DjangoMixpanelMixin()
+    request_mock.get_host = lambda: "example.com"
     result = instance.mixpanel_get_payload(request_mock, {"a": 1})
-    assert result == {"a": 1, "origin": "django-view-mixin", "page": "/hello-world"}
+    assert result == {
+        "a": 1,
+        "origin": "django-view-mixin",
+        "page": "/hello-world",
+        "host": "example.com",
+    }
 
 
 def test_get_payload_empty(request_mock: Mock) -> None:
     instance = DjangoMixpanelMixin()
+    request_mock.get_host = lambda: "example.com"
     result = instance.mixpanel_get_payload(request_mock, {})
-    assert result == {"origin": "django-view-mixin", "page": "/hello-world"}
+    assert result == {
+        "origin": "django-view-mixin",
+        "page": "/hello-world",
+        "host": "example.com",
+    }
 
 
 @pytest.mark.parametrize(
