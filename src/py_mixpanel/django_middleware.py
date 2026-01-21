@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 import re
-
+import logging
 from .tracking import Tracking, ANONYMOUS_USER_ID
 
 if t.TYPE_CHECKING:
@@ -12,6 +12,8 @@ if t.TYPE_CHECKING:
 
 MIXPANEL_SESSION_KEY = "_py_mixpanel"
 DEFAULT_PAGE_VIEW_EVENT_NAME = "Page Viewed"
+
+logger = logging.getLogger(__name__)
 
 
 class DjangoMixpanelMiddleware:
@@ -35,7 +37,17 @@ class DjangoMixpanelMiddleware:
         if not exclusion_patterns:
             return False
 
-        return any(re.match(pattern, path) for pattern in exclusion_patterns)
+        for pattern in exclusion_patterns:
+            try:
+                if re.match(pattern, path):
+                    return True
+            except re.error as e:
+                logger.warning(
+                    f"Invalid regex pattern in EXCLUDE_PATHS: {pattern!r}. "
+                    f"Error: {e}. Skipping."
+                )
+                continue
+        return False
 
     def _get_django_settings(self) -> LazySettings:
         from django.conf import settings

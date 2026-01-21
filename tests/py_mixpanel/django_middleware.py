@@ -260,6 +260,8 @@ def test_middleware_renders_response() -> None:
         ([], "/api/v1/users", True),
         ([], "/health", True),
         (None, "/api/v1/users", True),
+        # Invalid pattern - should log warning and still track
+        ([r"[invalid"], "/api/users", True),
     ],
 )
 def test_path_exclusion(
@@ -286,8 +288,11 @@ def test_path_exclusion(
 
     get_response_mock = Mock()
     middleware.get_response = get_response_mock
+    with patch("py_mixpanel.django_middleware.logger") as logger_mock:
+        middleware(request_mock)
 
-    middleware(request_mock)
+        if exclude_paths and r"[invalid" in exclude_paths:
+            logger_mock.warning.assert_called_once()
 
     if should_track:
         assert tracker_mock.call_count == 1
