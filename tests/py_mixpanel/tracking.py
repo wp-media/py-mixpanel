@@ -154,3 +154,99 @@ def test_hashing_anonymous_user_id(mixpanel_mock: Mock) -> None:
     tracker = Tracking(ANONYMOUS_USER_ID, enable_tracking=True)
 
     assert tracker.hash(ANONYMOUS_USER_ID) == "anonymous"
+
+
+@patch("mixpanel.Mixpanel")
+def test_track_order_placed(mixpanel_mock: Mock) -> None:
+    mixpanel_instance = Mock()
+    mixpanel_mock.return_value = mixpanel_instance
+
+    tracker = Tracking("abc", enable_tracking=True)
+    user_id = "user@example.com"
+    tracker.track_order_placed(
+        user_id,
+        "order-123",
+        product_name="Product A",
+        additional_context={"product_id": "123"},
+    )
+
+    mixpanel_instance.track.assert_called_once_with(
+        tracker.hash(user_id),
+        "Order Placed",
+        {"order_id": "order-123", "product_name": "Product A", "product_id": "123"},
+    )
+
+
+@patch("mixpanel.Mixpanel")
+def test_track_sso_link_clicked(mixpanel_mock: Mock) -> None:
+    mixpanel_instance = Mock()
+    mixpanel_mock.return_value = mixpanel_instance
+
+    tracker = Tracking("abc", enable_tracking=True)
+    user_id = "user@example.com"
+    tracker.track_sso_link_clicked(
+        user_id,
+        sso_provider="Google",
+        redirect_url="https://example.com",
+        additional_context={"product_id": "123"},
+    )
+
+    mixpanel_instance.track.assert_called_once_with(
+        tracker.hash(user_id),
+        "SSO Link Clicked",
+        {
+            "sso_provider": "Google",
+            "redirect_url": "https://example.com",
+            "product_id": "123",
+        },
+    )
+
+
+@patch("mixpanel.Mixpanel")
+def test_track_actionable_resolved(mixpanel_mock: Mock) -> None:
+    mixpanel_instance = Mock()
+    mixpanel_mock.return_value = mixpanel_instance
+
+    tracker = Tracking("abc", enable_tracking=True)
+    user_id = "user@example.com"
+    tracker.track_actionable_resolved(
+        user_id,
+        actionable_id="123",
+        actionable_type="Product",
+        additional_context={"product_id": "123"},
+    )
+
+    mixpanel_instance.track.assert_called_once_with(
+        tracker.hash(user_id),
+        "Actionable Resolved",
+        {"actionable_id": "123", "actionable_type": "Product", "product_id": "123"},
+    )
+
+
+@patch("mixpanel.Mixpanel")
+def test_track_sso_link_clicked_empty_strings(mixpanel_mock: Mock) -> None:
+    """Test that empty string optional parameters are treated as falsy."""
+    mixpanel_instance = Mock()
+    mixpanel_mock.return_value = mixpanel_instance
+
+    tracker = Tracking("abc", enable_tracking=True)
+    user_id = "user@example.com"
+    tracker.track_sso_link_clicked(user_id, sso_provider="", redirect_url="")
+
+    call_args = mixpanel_instance.track.call_args
+    assert "sso_provider" not in call_args[0][2]
+    assert "redirect_url" not in call_args[0][2]
+
+
+@patch("mixpanel.Mixpanel")
+def test_track_order_placed_empty_string_product_name(mixpanel_mock: Mock) -> None:
+    """Test empty string product_name is treated as falsy and not included."""
+    mixpanel_instance = Mock()
+    mixpanel_mock.return_value = mixpanel_instance
+
+    tracker = Tracking("abc", enable_tracking=True)
+    user_id = "user@example.com"
+    tracker.track_order_placed(user_id, "order-123", product_name="")
+
+    call_args = mixpanel_instance.track.call_args
+    assert "product_name" not in call_args[0][2]

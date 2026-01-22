@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import typing as t
-
+import re
+import logging
 from .tracking import Tracking, ANONYMOUS_USER_ID
 
 if t.TYPE_CHECKING:
@@ -11,6 +12,8 @@ if t.TYPE_CHECKING:
 
 MIXPANEL_SESSION_KEY = "_py_mixpanel"
 DEFAULT_PAGE_VIEW_EVENT_NAME = "Page Viewed"
+
+logger = logging.getLogger(__name__)
 
 
 class DjangoMixpanelMiddleware:
@@ -26,6 +29,26 @@ class DjangoMixpanelMiddleware:
             self._get_django_settings(), "MIXPANEL_OPTIONS", {}
         )
 
+    def _should_exclude_path(self, path: str) -> bool:
+        """
+        Check if the path should be excluded from tracking.
+        """
+        exclusion_patterns = self.settings.get("EXCLUDE_PATHS", [])
+        if not exclusion_patterns:
+            return False
+
+        for pattern in exclusion_patterns:
+            try:
+                if re.match(pattern, path):
+                    return True
+            except re.error as e:
+                logger.warning(
+                    f"Invalid regex pattern in EXCLUDE_PATHS: {pattern!r}. "
+                    f"Error: {e}. Skipping."
+                )
+                continue
+        return False
+
     def _get_django_settings(self) -> LazySettings:
         from django.conf import settings
 
@@ -37,6 +60,7 @@ class DjangoMixpanelMiddleware:
         payload = {
             "origin": "django-middleware",
             "page": str(request.path),
+            "host": request.get_host(),
         }
 
         if self.settings.get("TRACK_HTMX", True):
@@ -52,6 +76,8 @@ class DjangoMixpanelMiddleware:
         return payload
 
     def __call__(self, request: HttpRequest):
+        if self._should_exclude_path(str(request.path)):
+            return self.get_response(request)
         if (
             bool(self.settings.get("ENABLE_TRACKING", True))
             and self.settings.get("TOKEN", "")

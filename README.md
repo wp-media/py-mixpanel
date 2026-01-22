@@ -54,6 +54,10 @@ MIXPANEL_OPTIONS = {
     # Provide a static default payload for all events
     PAGE_VIEW_EVENT_PAYLOAD: dict,  # default: {}
 
+    # Paths matching any pattern will not trigger automatic page view events
+    EXCLUDE_PATHS: list[str],  # default: []
+    # Example: [r"^/api/", r"^/health"] to exclude API and health check endpoints
+
 }
 ```
 

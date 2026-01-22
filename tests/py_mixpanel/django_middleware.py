@@ -21,10 +21,12 @@ def test_initialization(django_settings_mock: Mock) -> None:
 def test_get_payload(request_mock: Mock) -> None:
     middleware = DjangoMixpanelMiddleware(Mock())
     request_mock.path = "/hello-world"
+    request_mock.get_host = lambda: "example.com"
     payload = middleware.get_payload(request_mock)
     assert payload == {
         "origin": "django-middleware",
         "page": "/hello-world",
+        "host": "example.com",
     }
 
 
@@ -34,10 +36,12 @@ def test_get_payload_with_setting_dict(
     django_settings_mock["PAGE_VIEW_EVENT_PAYLOAD"] = {"a": "1", "b": "2"}
     middleware = DjangoMixpanelMiddleware(Mock())
     request_mock.path = "/hello-world"
+    request_mock.get_host = lambda: "example.com"
     payload = middleware.get_payload(request_mock)
     assert payload == {
         "origin": "django-middleware",
         "page": "/hello-world",
+        "host": "example.com",
         "a": "1",
         "b": "2",
     }
@@ -80,6 +84,7 @@ def test_tracking(
 
     request_mock.user.is_authenticated = True
     request_mock.user.email = "mark@mark.com"
+    request_mock.get_host = lambda: "example.com"
 
     tracking_instance = Mock()
     tracker_mock.return_value = tracking_instance
@@ -97,6 +102,7 @@ def test_tracking(
         {
             "origin": "django-middleware",
             "page": "/hello-world",
+            "host": "example.com",
         },
     )
 
@@ -207,6 +213,7 @@ def test_htmx_tracking(
     middleware = DjangoMixpanelMiddleware(Mock())
 
     request_mock.user.is_authenticated = True
+    request_mock.get_host = lambda: "example.com"
     request_mock.headers.update(
         {
             "HX-ABC": "abc",
@@ -218,6 +225,7 @@ def test_htmx_tracking(
     assert middleware.get_payload(request_mock) == {
         "origin": "django-middleware",
         "page": "/hello-world",
+        "host": "example.com",
         "hx-abc": "abc",
         "hx-xyz": "xyz",
     }
@@ -230,8 +238,64 @@ def test_middleware_renders_response() -> None:
     middleware = DjangoMixpanelMiddleware(get_response_mock)
     request_mock = Mock()
     request_mock.user.is_authenticated = False
+    request_mock.get_host = lambda: "example.com"
 
     response = middleware(request_mock)
 
     get_response_mock.assert_called_once_with(request_mock)
     assert response == SENTINEL
+
+
+@pytest.mark.parametrize(
+    "exclude_paths,request_path,should_track",
+    [
+        # Matches exclusion pattern - excluded
+        ([r"^/api/", r"^/health"], "/api/v1/users", False),
+        ([r"^/api/", r"^/health"], "/health", False),
+        ([r"^/api/", r"^/health"], "/api/users", False),
+        # Doesn't match exclusion pattern - tracked
+        ([r"^/api/", r"^/health"], "/dashboard", True),
+        ([r"^/api/", r"^/health"], "/users", True),
+        # Empty or missing exclusion list - all tracked
+        ([], "/api/v1/users", True),
+        ([], "/health", True),
+        (None, "/api/v1/users", True),
+        # Invalid pattern - should log warning and still track
+        ([r"[invalid"], "/api/users", True),
+    ],
+)
+def test_path_exclusion(
+    django_settings_mock: dict,
+    tracker_mock: Mock,
+    request_mock: Mock,
+    exclude_paths: list[str] | None,
+    request_path: str,
+    should_track: bool,
+) -> None:
+    """Test path exclusion functionality with various patterns and paths."""
+    if exclude_paths is not None:
+        django_settings_mock["EXCLUDE_PATHS"] = exclude_paths
+
+    middleware = DjangoMixpanelMiddleware(Mock())
+
+    request_mock.user.is_authenticated = True
+    request_mock.user.email = "mark@domain.com"
+    request_mock.path = request_path
+    request_mock.get_host.return_value = "example.com"
+
+    tracking_instance = Mock()
+    tracker_mock.return_value = tracking_instance
+
+    get_response_mock = Mock()
+    middleware.get_response = get_response_mock
+    with patch("py_mixpanel.django_middleware.logger") as logger_mock:
+        middleware(request_mock)
+
+        if exclude_paths and r"[invalid" in exclude_paths:
+            logger_mock.warning.assert_called_once()
+
+    if should_track:
+        assert tracker_mock.call_count == 1
+    else:
+        assert tracker_mock.call_count == 0
+        get_response_mock.assert_called_once_with(request_mock)
