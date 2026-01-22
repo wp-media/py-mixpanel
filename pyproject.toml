@@ -9,6 +9,7 @@ description = "Python wrapper for Mixpanel analytics"
 authors = [
     {name = "Mathieu Lamiot", email = "mathieu@wp-media.me"},
     {name = "Mark Boom", email = "mark.boom@group.one"},
+    {name = "Gautam Aggrawal", email = "gautam.aggrawal@group.one"},
 ]
 license = {text = "MIT"}
 readme = "README.md"
